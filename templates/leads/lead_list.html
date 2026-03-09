@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}Leads - Gharpayy CRM{% endblock %}
+{% block breadcrumb %}<li class="breadcrumb-item active">Leads</li>{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center">
+  <div>
+    <h1><i class="bi bi-people-fill me-2 text-primary"></i>Leads</h1>
+    <small class="text-muted">{{ total_count }} lead{{ total_count|pluralize }} found</small>
+  </div>
+  <a href="{% url 'lead_capture' %}" class="btn btn-primary">
+    <i class="bi bi-plus-circle me-1"></i> New Lead
+  </a>
+</div>
+
+<!-- Filters -->
+<div class="card border-0 shadow-sm mb-3">
+  <div class="card-body py-3">
+    <form method="get" class="row g-2 align-items-end">
+      <div class="col-md-4">
+        <input type="text" name="search" class="form-control form-control-sm" placeholder="Search by name..." value="{{ search }}">
+      </div>
+      <div class="col-md-3">
+        <select name="status" class="form-select form-select-sm">
+          <option value="">All Stages</option>
+          {% for key, label in pipeline_stages %}
+          <option value="{{ key }}" {% if status_filter == key %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <select name="source" class="form-select form-select-sm">
+          <option value="">All Sources</option>
+          {% for key, label in lead_sources %}
+          <option value="{{ key }}" {% if source_filter == key %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2 d-flex gap-2">
+        <button type="submit" class="btn btn-primary btn-sm flex-grow-1">Filter</button>
+        <a href="{% url 'lead_list' %}" class="btn btn-outline-secondary btn-sm">Reset</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Phone</th>
+            <th>Source</th>
+            <th>Stage</th>
+            <th>Assigned Agent</th>
+            <th>Created</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for lead in leads %}
+          <tr>
+            <td class="text-muted small">{{ forloop.counter }}</td>
+            <td>
+              <a href="{% url 'lead_detail' lead.id %}" class="fw-bold text-decoration-none">{{ lead.name }}</a>
+              {% if lead.email %}<div class="text-muted" style="font-size:.72rem;">{{ lead.email }}</div>{% endif %}
+            </td>
+            <td class="small">{{ lead.phone }}</td>
+            <td><span class="badge bg-light text-dark small">{{ lead.get_source_display }}</span></td>
+            <td><span class="badge badge-{{ lead.status }}">{{ lead.get_status_display }}</span></td>
+            <td class="small">
+              {% if lead.assigned_agent %}
+              <i class="bi bi-person-fill me-1 text-muted"></i>{{ lead.assigned_agent.name }}
+              {% else %}
+              <span class="text-danger fst-italic"><i class="bi bi-exclamation-circle me-1"></i>Unassigned</span>
+              {% endif %}
+            </td>
+            <td class="text-muted small">{{ lead.created_at|date:"d M Y" }}</td>
+            <td>
+              <div class="d-flex gap-1">
+                <a href="{% url 'lead_detail' lead.id %}" class="btn btn-sm btn-outline-primary" title="Edit"><i class="bi bi-pencil"></i></a>
+                <a href="{% url 'schedule_visit' %}?lead_id={{ lead.id }}" class="btn btn-sm btn-outline-info" title="Schedule Visit"><i class="bi bi-calendar-plus"></i></a>
+                <form method="post" action="{% url 'delete_lead' lead.id %}" onsubmit="return confirm('Delete {{ lead.name }}?');" style="display:inline;">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="8" class="text-center text-muted py-5">
+              <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+              No leads found. <a href="{% url 'lead_capture' %}">Capture your first lead.</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% if total_pages > 1 %}
+  <div class="card-footer bg-white d-flex justify-content-between align-items-center py-3">
+    <small class="text-muted">Page {{ page }} of {{ total_pages }} &mdash; {{ total_count }} total</small>
+    <nav>
+      <ul class="pagination pagination-sm mb-0 gap-1">
+        <li class="page-item {% if not has_prev %}disabled{% endif %}">
+          <a class="page-link" href="?page={{ prev_page }}&status={{ status_filter }}&source={{ source_filter }}&search={{ search }}">
+            <i class="bi bi-chevron-left"></i> Prev
+          </a>
+        </li>
+        <li class="page-item disabled"><span class="page-link">{{ page }} / {{ total_pages }}</span></li>
+        <li class="page-item {% if not has_next %}disabled{% endif %}">
+          <a class="page-link" href="?page={{ next_page }}&status={{ status_filter }}&source={{ source_filter }}&search={{ search }}">
+            Next <i class="bi bi-chevron-right"></i>
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

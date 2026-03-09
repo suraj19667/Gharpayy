@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Gharpayy CRM{% endblock %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #4e73df;
+      --success: #1cc88a;
+      --info: #36b9cc;
+      --warning: #f6c23e;
+      --danger: #e74a3b;
+      --secondary: #858796;
+      --dark: #5a5c69;
+      --sidebar-width: 250px;
+    }
+    body { font-family: 'Nunito', sans-serif; background: #f8f9fc; color: #5a5c69; }
+    #sidebar {
+      width: var(--sidebar-width); min-height: 100vh;
+      background: linear-gradient(180deg, #4e73df 10%, #224abe 100%);
+      position: fixed; top: 0; left: 0; z-index: 1000; transition: width 0.3s;
+    }
+    #sidebar .brand { padding: 1.5rem 1rem; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.15); }
+    #sidebar .brand h4 { color: #fff; font-weight: 800; margin: 0; font-size: 1.1rem; letter-spacing: .05rem; }
+    #sidebar .brand small { color: rgba(255,255,255,0.7); font-size: .7rem; }
+    #sidebar .nav-item .nav-link {
+      color: rgba(255,255,255,0.8); padding: .75rem 1rem; font-size: .85rem; font-weight: 600;
+      display: flex; align-items: center; gap: .75rem; border-left: 3px solid transparent; transition: all .2s;
+    }
+    #sidebar .nav-item .nav-link:hover,
+    #sidebar .nav-item .nav-link.active { color: #fff; background: rgba(255,255,255,0.1); border-left-color: #fff; }
+    #sidebar .nav-item .nav-link i { width: 1.2rem; text-align: center; font-size: .9rem; }
+    #sidebar .nav-divider {
+      padding: .5rem 1rem; font-size: .65rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .1rem; color: rgba(255,255,255,0.4);
+      border-top: 1px solid rgba(255,255,255,0.1); margin-top: .5rem;
+    }
+    #main-content { margin-left: var(--sidebar-width); min-height: 100vh; }
+    .topbar {
+      background: #fff; box-shadow: 0 .15rem 1.75rem rgba(58,59,69,.15);
+      padding: 0 1.5rem; height: 60px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .stat-card { border: none; border-radius: .75rem; box-shadow: 0 .15rem 1.75rem rgba(58,59,69,.1); transition: transform .2s; }
+    .stat-card:hover { transform: translateY(-2px); }
+    .stat-card .card-body { padding: 1.25rem; }
+    .stat-card .stat-value { font-size: 1.75rem; font-weight: 700; }
+    .stat-card .stat-label { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05rem; }
+    .stat-card .stat-icon { font-size: 2rem; opacity: .3; }
+    .badge-new_lead { background: #4e73df; }
+    .badge-contacted { background: #36b9cc; }
+    .badge-requirement_collected { background: #1cc88a; }
+    .badge-property_suggested { background: #f6c23e; color: #000 !important; }
+    .badge-visit_scheduled { background: #fd7e14; }
+    .badge-visit_completed { background: #6f42c1; }
+    .badge-booked { background: #1cc88a; }
+    .badge-lost { background: #e74a3b; }
+    .kanban-column { min-width: 200px; background: #f8f9fc; border-radius: .75rem; border: 1px solid #e3e6f0; }
+    .kanban-header { padding: .75rem 1rem; border-bottom: 1px solid #e3e6f0; font-weight: 700; font-size: .8rem; border-radius: .75rem .75rem 0 0; }
+    .kanban-card { background: #fff; border: 1px solid #e3e6f0; border-radius: .5rem; padding: .75rem; margin: .5rem; font-size: .82rem; transition: box-shadow .2s; }
+    .kanban-card:hover { box-shadow: 0 .25rem .75rem rgba(58,59,69,.15); }
+    .table { font-size: .875rem; }
+    .table thead th { background: #f8f9fc; border-color: #e3e6f0; font-weight: 700; font-size: .75rem; text-transform: uppercase; letter-spacing: .05rem; color: var(--secondary); }
+    .page-header { margin-bottom: 1.5rem; }
+    .page-header h1 { font-size: 1.5rem; font-weight: 700; color: var(--dark); }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; }
+    ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+    @media (max-width: 768px) {
+      #sidebar { width: 0; overflow: hidden; }
+      #sidebar.show { width: var(--sidebar-width); }
+      #main-content { margin-left: 0; }
+    }
+  </style>
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+{% if user.is_authenticated %}
+<nav id="sidebar">
+  <div class="brand">
+    <h4><i class="bi bi-house-heart-fill me-2"></i>Gharpayy</h4>
+    <small>CRM Platform</small>
+  </div>
+  <div class="nav-divider mt-2">Navigation</div>
+  <ul class="nav flex-column">
+    <li class="nav-item">
+      <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
+        <i class="bi bi-speedometer2"></i> Dashboard
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if 'lead' in request.resolver_match.url_name and 'capture' not in request.resolver_match.url_name %}active{% endif %}" href="{% url 'lead_list' %}">
+        <i class="bi bi-people-fill"></i> Leads
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if request.resolver_match.url_name == 'pipeline_view' %}active{% endif %}" href="{% url 'pipeline_view' %}">
+        <i class="bi bi-kanban-fill"></i> Pipeline
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if 'visit' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'visit_list' %}">
+        <i class="bi bi-calendar-check-fill"></i> Visits
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if request.resolver_match.url_name == 'followup_list' %}active{% endif %}" href="{% url 'followup_list' %}">
+        <i class="bi bi-bell-fill"></i> Follow-ups
+        {% if pending_followups_count > 0 %}
+        <span class="badge bg-warning text-dark ms-auto" style="font-size:.65rem;">{{ pending_followups_count }}</span>
+        {% endif %}
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if request.resolver_match.url_name == 'analytics' %}active{% endif %}" href="{% url 'analytics' %}">
+        <i class="bi bi-bar-chart-fill"></i> Analytics
+      </a>
+    </li>
+    <div class="nav-divider">Management</div>
+    <li class="nav-item">
+      <a class="nav-link {% if 'agent' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'agent_list' %}">
+        <i class="bi bi-person-badge-fill"></i> Agents
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if request.resolver_match.url_name == 'lead_capture' %}active{% endif %}" href="{% url 'lead_capture' %}">
+        <i class="bi bi-plus-circle-fill"></i> Capture Lead
+      </a>
+    </li>
+  </ul>
+  <div style="position:absolute;bottom:1rem;left:0;right:0;padding:0 1rem;">
+    <a href="{% url 'logout' %}" class="btn btn-sm btn-outline-light w-100">
+      <i class="bi bi-box-arrow-right"></i> Logout
+    </a>
+  </div>
+</nav>
+
+<div id="main-content">
+  <div class="topbar">
+    <div class="d-flex align-items-center gap-2">
+      <button class="btn btn-sm btn-outline-secondary d-md-none" onclick="document.getElementById('sidebar').classList.toggle('show')">
+        <i class="bi bi-list"></i>
+      </button>
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0 small">
+          <li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-decoration-none">Home</a></li>
+          {% block breadcrumb %}{% endblock %}
+        </ol>
+      </nav>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+      <a href="{% url 'followup_list' %}" class="position-relative text-decoration-none text-secondary">
+        <i class="bi bi-bell fs-5"></i>
+        {% if pending_followups_count > 0 %}
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:.6rem;">
+          {{ pending_followups_count }}
+        </span>
+        {% endif %}
+      </a>
+      <div class="d-flex align-items-center gap-2">
+        <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white"
+             style="width:34px;height:34px;font-size:.85rem;font-weight:700;">
+          {{ user.username|first|upper }}
+        </div>
+        <span class="small fw-bold">{{ user.username }}</span>
+      </div>
+    </div>
+  </div>
+  <div class="p-4">
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% block content %}{% endblock %}
+  </div>
+</div>
+
+{% else %}
+{% block auth_content %}{% endblock %}
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

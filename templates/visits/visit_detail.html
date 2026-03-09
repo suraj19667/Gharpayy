@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Visit Detail - Gharpayy CRM{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'visit_list' %}" class="text-decoration-none">Visits</a></li>
+<li class="breadcrumb-item active">{{ visit.property_name }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center">
+  <div>
+    <h1 class="mb-1">{{ visit.property_name }}</h1>
+    <div class="text-muted small">
+      <i class="bi bi-person me-1"></i>{{ visit.lead.name }} &bull;
+      <i class="bi bi-calendar me-1"></i>{{ visit.visit_date }} at {{ visit.visit_time }}
+    </div>
+  </div>
+  <form method="post" action="{% url 'delete_visit' visit.id %}" onsubmit="return confirm('Delete this visit?');">
+    {% csrf_token %}
+    <button class="btn btn-outline-danger"><i class="bi bi-trash me-1"></i>Delete</button>
+  </form>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-700 py-3">
+        <i class="bi bi-info-circle me-2 text-primary"></i>Visit Information
+      </div>
+      <div class="card-body">
+        <table class="table table-borderless small mb-0">
+          <tr>
+            <th class="text-muted" style="width:40%">Lead</th>
+            <td><a href="{% url 'lead_detail' visit.lead.id %}" class="fw-600">{{ visit.lead.name }}</a></td>
+          </tr>
+          <tr>
+            <th class="text-muted">Phone</th>
+            <td>{{ visit.lead.phone }}</td>
+          </tr>
+          <tr>
+            <th class="text-muted">Property</th>
+            <td class="fw-600">{{ visit.property_name }}</td>
+          </tr>
+          {% if visit.property_address %}<tr>
+            <th class="text-muted">Address</th>
+            <td>{{ visit.property_address }}</td>
+          </tr>{% endif %}
+          <tr>
+            <th class="text-muted">Date</th>
+            <td>{{ visit.visit_date }}</td>
+          </tr>
+          <tr>
+            <th class="text-muted">Time</th>
+            <td>{{ visit.visit_time }}</td>
+          </tr>
+          <tr>
+            <th class="text-muted">Current Outcome</th>
+            <td><span
+                class="badge bg-{% if visit.outcome == 'pending' %}warning text-dark{% elif visit.outcome == 'completed' %}success{% elif visit.outcome == 'cancelled' %}danger{% else %}secondary{% endif %}">
+                {{ visit.get_outcome_display }}
+              </span></td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-700 py-3">
+        <i class="bi bi-pencil-square me-2 text-primary"></i>Update Outcome
+      </div>
+      <div class="card-body">
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label fw-600 small">Visit Outcome</label>
+            {{ outcome_form.outcome }}
+          </div>
+          <div class="mb-4">
+            <label class="form-label fw-600 small">Notes</label>
+            {{ outcome_form.notes }}
+          </div>
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-save me-1"></i>Update Outcome
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

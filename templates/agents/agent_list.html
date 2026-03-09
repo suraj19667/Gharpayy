@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Agents - Gharpayy CRM{% endblock %}
+{% block breadcrumb %}<li class="breadcrumb-item active">Agents</li>{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center">
+  <div>
+    <h1><i class="bi bi-person-badge-fill me-2 text-primary"></i>Agents</h1>
+    {% if next_agent %}
+    <small class="text-muted">
+      <i class="bi bi-arrow-repeat me-1"></i>Next round-robin assignment: <strong>{{ next_agent }}</strong>
+    </small>
+    {% endif %}
+  </div>
+  <a href="{% url 'agent_create' %}" class="btn btn-primary">
+    <i class="bi bi-plus-circle me-1"></i> Add Agent
+  </a>
+</div>
+
+<div class="row g-3">
+  {% for s in stats %}
+  <div class="col-md-6 col-lg-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <!-- Header row -->
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0"
+               style="width:50px;height:50px;font-size:1.25rem;font-weight:700;">
+            {{ s.agent.name|first|upper }}
+          </div>
+          <div class="flex-grow-1 overflow-hidden">
+            <h6 class="fw-bold mb-0 text-truncate">{{ s.agent.name }}</h6>
+            <div class="text-muted small text-truncate">{{ s.agent.email }}</div>
+            {% if s.agent.phone %}<div class="text-muted small">{{ s.agent.phone }}</div>{% endif %}
+          </div>
+          <span class="badge {% if s.agent.is_active %}bg-success{% else %}bg-secondary{% endif %} flex-shrink-0">
+            {% if s.agent.is_active %}Active{% else %}Inactive{% endif %}
+          </span>
+        </div>
+
+        <!-- Stats row: 4 mini cards -->
+        <div class="row g-2 mb-3">
+          <div class="col-3 text-center">
+            <div class="fw-bold fs-5 text-primary">{{ s.total }}</div>
+            <div style="font-size:.65rem;" class="text-muted text-uppercase">Total</div>
+          </div>
+          <div class="col-3 text-center">
+            <div class="fw-bold fs-5 text-warning">{{ s.active }}</div>
+            <div style="font-size:.65rem;" class="text-muted text-uppercase">Active</div>
+          </div>
+          <div class="col-3 text-center">
+            <div class="fw-bold fs-5 text-success">{{ s.booked }}</div>
+            <div style="font-size:.65rem;" class="text-muted text-uppercase">Booked</div>
+          </div>
+          <div class="col-3 text-center">
+            <div class="fw-bold fs-5 text-info">{{ s.rate }}%</div>
+            <div style="font-size:.65rem;" class="text-muted text-uppercase">Conv.</div>
+          </div>
+        </div>
+
+        <!-- Conversion progress bar -->
+        <div class="progress mb-3" style="height:5px;" title="Conversion rate: {{ s.rate }}%">
+          <div class="progress-bar bg-success" style="width:{{ s.rate }}%;"></div>
+        </div>
+      </div>
+
+      <div class="card-footer bg-transparent d-flex gap-2 py-2">
+        <a href="{% url 'lead_list' %}?assigned={{ s.agent.id }}" class="btn btn-sm btn-outline-secondary flex-grow-1">
+          <i class="bi bi-people me-1"></i>View Leads
+        </a>
+        <a href="{% url 'agent_edit' s.agent.id %}" class="btn btn-sm btn-outline-primary">
+          <i class="bi bi-pencil"></i>
+        </a>
+        <form method="post" action="{% url 'agent_delete' s.agent.id %}" onsubmit="return confirm('Delete {{ s.agent.name }}?');">
+          {% csrf_token %}
+          <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="col-12 text-center text-muted py-5">
+    <i class="bi bi-people fs-1 d-block mb-3 opacity-25"></i>
+    No agents yet. <a href="{% url 'agent_create' %}">Add your first agent.</a>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

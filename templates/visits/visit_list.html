@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}Visits - Gharpayy CRM{% endblock %}
+{% block breadcrumb %}<li class="breadcrumb-item active">Visits</li>{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center">
+  <h1><i class="bi bi-calendar-check-fill me-2 text-primary"></i>Property Visits</h1>
+  <a href="{% url 'schedule_visit' %}" class="btn btn-primary">
+    <i class="bi bi-calendar-plus me-1"></i> Schedule Visit
+  </a>
+</div>
+
+<!-- Filter -->
+<div class="card border-0 shadow-sm mb-3">
+  <div class="card-body py-3">
+    <form method="get" class="row g-2 align-items-end">
+      <div class="col-md-4">
+        <select name="outcome" class="form-select form-select-sm">
+          <option value="">All Outcomes</option>
+          {% for key, label in visit_outcomes %}
+          <option value="{{ key }}" {% if outcome_filter == key %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2 d-flex gap-2">
+        <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+        <a href="{% url 'visit_list' %}" class="btn btn-outline-secondary btn-sm">Reset</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th>Lead</th>
+            <th>Property</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Outcome</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for visit in visits %}
+          <tr>
+            <td>
+              <a href="{% url 'lead_detail' visit.lead.id %}" class="fw-600 text-decoration-none">{{ visit.lead.name }}</a>
+              <div class="text-muted" style="font-size:0.72rem;">{{ visit.lead.phone }}</div>
+            </td>
+            <td>
+              <div class="fw-600 small">{{ visit.property_name }}</div>
+              {% if visit.property_address %}<div class="text-muted" style="font-size:0.72rem;">{{ visit.property_address }}</div>{% endif %}
+            </td>
+            <td class="small">{{ visit.visit_date }}</td>
+            <td class="small">{{ visit.visit_time }}</td>
+            <td>
+              {% if visit.outcome == 'pending' %}
+              <span class="badge bg-warning text-dark">Pending</span>
+              {% elif visit.outcome == 'completed' or visit.outcome == 'interested' %}
+              <span class="badge bg-success">{{ visit.get_outcome_display }}</span>
+              {% elif visit.outcome == 'cancelled' %}
+              <span class="badge bg-danger">Cancelled</span>
+              {% else %}
+              <span class="badge bg-secondary">{{ visit.get_outcome_display }}</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="d-flex gap-1">
+                <a href="{% url 'visit_detail' visit.id %}" class="btn btn-sm btn-outline-primary">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                <form method="post" action="{% url 'delete_visit' visit.id %}" onsubmit="return confirm('Delete this visit?');">
+                  {% csrf_token %}
+                  <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="text-center text-muted py-5">
+              <i class="bi bi-calendar-x fs-3 d-block mb-2"></i>
+              No visits scheduled. <a href="{% url 'schedule_visit' %}">Schedule one now.</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

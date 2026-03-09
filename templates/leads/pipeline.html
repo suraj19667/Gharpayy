@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Pipeline - Gharpayy CRM{% endblock %}
+{% block breadcrumb %}<li class="breadcrumb-item active">Pipeline</li>{% endblock %}
+
+{% block extra_css %}
+<style>
+  .pipeline-wrapper { overflow-x: auto; padding-bottom: 1rem; }
+  .pipeline-board { display: flex; gap: 1rem; min-width: max-content; }
+  .kanban-column { width: 230px; }
+  .kanban-body { min-height: 200px; max-height: 72vh; overflow-y: auto; }
+  .stage-new_lead .kanban-header { background: #eef2ff; color: #4e73df; }
+  .stage-contacted .kanban-header { background: #e0f7fa; color: #006064; }
+  .stage-requirement_collected .kanban-header { background: #e8f5e9; color: #2e7d32; }
+  .stage-property_suggested .kanban-header { background: #fffde7; color: #827717; }
+  .stage-visit_scheduled .kanban-header { background: #fff3e0; color: #e65100; }
+  .stage-visit_completed .kanban-header { background: #f3e5f5; color: #6a1b9a; }
+  .stage-booked .kanban-header { background: #e8f5e9; color: #1b5e20; }
+  .stage-lost .kanban-header { background: #ffebee; color: #b71c1c; }
+  .kanban-card select { border: 1px solid #e3e6f0; background: #f8f9fc; font-size: .72rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center">
+  <h1><i class="bi bi-kanban-fill me-2 text-primary"></i>Pipeline</h1>
+  <a href="{% url 'lead_capture' %}" class="btn btn-primary">
+    <i class="bi bi-plus-circle me-1"></i> New Lead
+  </a>
+</div>
+
+<div class="pipeline-wrapper">
+  <div class="pipeline-board">
+    {% for stage in stages_data %}
+    <div class="kanban-column stage-{{ stage.key }}">
+      <div class="kanban-header d-flex justify-content-between align-items-center">
+        <span class="fw-bold">{{ stage.label }}</span>
+        <span class="badge bg-white text-dark">{{ stage.count }}</span>
+      </div>
+      <div class="kanban-body p-1">
+        {% for lead in stage.leads %}
+        <div class="kanban-card">
+          <!-- Lead name links to detail -->
+          <a href="{% url 'lead_detail' lead.id %}" class="text-decoration-none text-dark fw-bold d-block mb-1">
+            {{ lead.name }}
+          </a>
+          <div class="text-muted mb-1" style="font-size:.72rem;">
+            <i class="bi bi-telephone-fill me-1"></i>{{ lead.phone }}
+          </div>
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="badge bg-light text-dark" style="font-size:.62rem;">{{ lead.get_source_display }}</span>
+            {% if lead.assigned_agent %}
+            <span class="text-muted" style="font-size:.65rem;">
+              <i class="bi bi-person-fill me-1"></i>{{ lead.assigned_agent.name|truncatechars:10 }}
+            </span>
+            {% else %}
+            <span class="text-danger" style="font-size:.65rem;"><i class="bi bi-exclamation me-1"></i>Unassigned</span>
+            {% endif %}
+          </div>
+          <!-- Quick stage change -->
+          <form method="post" action="{% url 'update_stage' lead.id %}">
+            {% csrf_token %}
+            <select name="status" class="form-select form-select-sm" onchange="this.form.submit()" title="Move to stage">
+              {% for stage_key, stage_label in pipeline_stages %}
+              <option value="{{ stage_key }}" {% if lead.status == stage_key %}selected{% endif %}>{{ stage_label }}</option>
+              {% endfor %}
+            </select>
+          </form>
+        </div>
+        {% empty %}
+        <div class="text-center text-muted py-4" style="font-size:.75rem;">
+          <i class="bi bi-inbox d-block fs-3 mb-1 opacity-50"></i>Empty
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

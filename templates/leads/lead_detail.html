@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% block title %}{{ lead.name }} - Gharpayy CRM{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'lead_list' %}" class="text-decoration-none">Leads</a></li>
+<li class="breadcrumb-item active">{{ lead.name }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center">
+  <div>
+    <h1 class="mb-1">{{ lead.name }}</h1>
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <span class="badge badge-{{ lead.status }} fs-6">{{ lead.get_status_display }}</span>
+      <small class="text-muted">
+        <i class="bi bi-telephone-fill me-1"></i>{{ lead.phone }}
+        {% if lead.email %} &bull; <i class="bi bi-envelope-fill me-1"></i>{{ lead.email }}{% endif %}
+        &bull; <i class="bi bi-megaphone-fill me-1"></i>{{ lead.get_source_display }}
+      </small>
+    </div>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{% url 'schedule_visit' %}?lead_id={{ lead.id }}" class="btn btn-outline-info">
+      <i class="bi bi-calendar-plus me-1"></i> Schedule Visit
+    </a>
+    <form method="post" action="{% url 'delete_lead' lead.id %}" onsubmit="return confirm('Delete this lead?');">
+      {% csrf_token %}
+      <button class="btn btn-outline-danger"><i class="bi bi-trash me-1"></i> Delete</button>
+    </form>
+  </div>
+</div>
+
+<div class="row g-3">
+  <!-- LEFT: Edit form -->
+  <div class="col-lg-7">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-bold py-3">
+        <i class="bi bi-pencil me-2 text-primary"></i>Lead Details
+      </div>
+      <div class="card-body">
+        <form method="post">
+          {% csrf_token %}
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-bold small">Full Name *</label>
+              {{ form.name }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold small">Phone *</label>
+              {{ form.phone }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold small">Email</label>
+              {{ form.email }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold small">Lead Source</label>
+              {{ form.source }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold small">Pipeline Stage</label>
+              {{ form.status }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold small">Assigned Agent</label>
+              {{ form.assigned_agent }}
+              {% if not lead.assigned_agent %}
+              <div class="form-text text-danger"><i class="bi bi-exclamation-triangle me-1"></i>No agent assigned — please assign one.</div>
+              {% endif %}
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-bold small">Notes</label>
+              {{ form.notes }}
+            </div>
+          </div>
+          <div class="mt-3 d-flex gap-2">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i> Save Changes</button>
+            <a href="{% url 'lead_list' %}" class="btn btn-outline-secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Visits for this lead -->
+    <div class="card border-0 shadow-sm mt-3">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+        <span class="fw-bold"><i class="bi bi-calendar-check me-2 text-info"></i>Property Visits</span>
+        <a href="{% url 'schedule_visit' %}?lead_id={{ lead.id }}" class="btn btn-sm btn-outline-info">
+          <i class="bi bi-plus me-1"></i> Schedule
+        </a>
+      </div>
+      <div class="card-body p-0">
+        {% for visit in visits %}
+        <div class="p-3 border-bottom d-flex justify-content-between align-items-start">
+          <div>
+            <div class="fw-bold small">{{ visit.property_name }}</div>
+            {% if visit.property_address %}
+            <div class="text-muted" style="font-size:.72rem;"><i class="bi bi-geo-alt me-1"></i>{{ visit.property_address }}</div>
+            {% endif %}
+            <div class="text-muted small mt-1">
+              <i class="bi bi-calendar3 me-1"></i>{{ visit.visit_date }}
+              <i class="bi bi-clock ms-2 me-1"></i>{{ visit.visit_time }}
+            </div>
+          </div>
+          <div class="text-end">
+            <span class="badge {% if visit.outcome == 'pending' %}bg-warning text-dark{% elif visit.outcome == 'completed' or visit.outcome == 'interested' %}bg-success{% elif visit.outcome == 'cancelled' %}bg-danger{% else %}bg-secondary{% endif %}">
+              {{ visit.get_outcome_display }}
+            </span>
+            <div class="mt-1">
+              <a href="{% url 'visit_detail' visit.id %}" class="btn btn-sm btn-outline-primary py-0" style="font-size:.72rem;">
+                <i class="bi bi-pencil me-1"></i>Update
+              </a>
+            </div>
+          </div>
+        </div>
+        {% empty %}
+        <div class="text-center text-muted py-3 small">
+          <i class="bi bi-calendar-x d-block mb-1 fs-4 opacity-50"></i>
+          No visits scheduled for this lead.
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Stage history + Follow-ups -->
+  <div class="col-lg-5">
+    <!-- Stage History Timeline -->
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-white fw-bold py-3">
+        <i class="bi bi-clock-history me-2 text-primary"></i>Stage History
+      </div>
+      <div class="card-body p-0" style="max-height:300px;overflow-y:auto;">
+        {% for h in history %}
+        <div class="p-3 border-bottom">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <span class="badge bg-secondary" style="font-size:.7rem;">{{ h.from_stage }}</span>
+              <i class="bi bi-arrow-right mx-1 text-muted" style="font-size:.75rem;"></i>
+              <span class="badge bg-primary" style="font-size:.7rem;">{{ h.to_stage }}</span>
+              <div class="text-muted mt-1" style="font-size:.7rem;"><i class="bi bi-person me-1"></i>{{ h.changed_by }}</div>
+            </div>
+            <small class="text-muted" style="font-size:.7rem;">{{ h.changed_at|date:"d M, H:i" }}</small>
+          </div>
+        </div>
+        {% empty %}
+        <div class="text-center text-muted py-3 small">No stage changes yet.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Follow-ups -->
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white fw-bold py-3">
+        <i class="bi bi-bell me-2 text-warning"></i>Follow-up Reminders
+      </div>
+      <div class="card-body p-0">
+        {% for fu in followups %}
+        <div class="p-3 border-bottom d-flex justify-content-between align-items-start">
+          <div>
+            <div class="small fw-bold">{{ fu.reminder_message|truncatechars:60 }}</div>
+            <small class="text-muted">Due: {{ fu.due_at|date:"d M Y, H:i" }}</small>
+            {% if fu.stage_at_creation %}
+            <div><span class="badge bg-light text-dark" style="font-size:.65rem;">Stage: {{ fu.stage_at_creation }}</span></div>
+            {% endif %}
+          </div>
+          {% if not fu.is_completed %}
+          <a href="{% url 'complete_followup' fu.id %}" class="btn btn-sm btn-outline-success flex-shrink-0">
+            <i class="bi bi-check"></i>
+          </a>
+          {% else %}
+          <span class="badge bg-success flex-shrink-0">Done</span>
+          {% endif %}
+        </div>
+        {% empty %}
+        <div class="text-center text-muted py-3 small">No reminders for this lead.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
