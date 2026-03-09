@@ -1,1 +1,1 @@
-jweb: gunicorn gharpayy.wsgi:application --log-file -
+web: gunicorn gharpayy.wsgi:application --log-file -
