@@ -8,6 +8,7 @@ services:
       pip install -r requirements.txt
       python manage.py collectstatic --no-input
       python manage.py migrate --run-syncdb
+      python manage.py create_admin
       python manage.py seed_data
     startCommand: gunicorn gharpayy.wsgi:application --log-file - --bind 0.0.0.0:$PORT
     envVars:
@@ -23,3 +24,9 @@ services:
         sync: false
       - key: MONGODB_DB
         value: gharpayy
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_EMAIL
+        value: admin@gharpayy.com
+      - key: ADMIN_PASSWORD
+        value: admin123

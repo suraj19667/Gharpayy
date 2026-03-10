@@ -71,11 +71,19 @@ import mongoengine
 MONGODB_URI = os.environ.get('MONGODB_URI', 'mongodb://localhost:27017/gharpayy')
 MONGODB_DB = os.environ.get('MONGODB_DB', 'gharpayy')
 
-mongoengine.connect(
-    db=MONGODB_DB,
-    host=MONGODB_URI,
-    alias='default',
-)
+try:
+    mongoengine.connect(
+        db=MONGODB_DB,
+        host=MONGODB_URI,
+        alias='default',
+        serverSelectionTimeoutMS=5000,
+    )
+    print(f"✓ MongoDB connected: {MONGODB_DB}")
+except Exception as e:
+    print(f"⚠ MongoDB connection failed: {str(e)}")
+    if not DEBUG:
+        # In production, we want to know about this but not crash
+        print("⚠ Running without MongoDB connection")
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
