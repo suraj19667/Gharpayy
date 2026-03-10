@@ -17,7 +17,8 @@ PAGE_SIZE = 15
 
 @login_required
 def lead_list(request):
-    \"\"\"Lead list view with error handling.\"\"\"\n    status_filter = request.GET.get('status', '')
+    """Lead list view with error handling."""
+    status_filter = request.GET.get('status', '')
     source_filter = request.GET.get('source', '')
     search = request.GET.get('search', '')
     page = int(request.GET.get('page', 1))
@@ -41,7 +42,7 @@ def lead_list(request):
         offset = (page - 1) * PAGE_SIZE
         leads = list(leads_qs.skip(offset).limit(PAGE_SIZE))
     except Exception as e:
-        logger.error(f\"Error fetching leads: {e}\", exc_info=True)
+        logger.error(f"Error fetching leads: {e}", exc_info=True)
         leads = []
         total_count = 0
         total_pages = 1
