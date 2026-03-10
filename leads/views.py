@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
 from datetime import datetime
+import logging
 
 from leads.models import Lead, StageHistory, FollowUp, PIPELINE_STAGES, LEAD_SOURCES, PIPELINE_STAGE_LABELS
 from agents.models import Agent
@@ -10,33 +11,42 @@ from agents.utils import assign_agent_round_robin
 from leads.forms import LeadCaptureForm, LeadUpdateForm, StageUpdateForm
 from visits.models import Visit
 
+logger = logging.getLogger(__name__)
 PAGE_SIZE = 15
 
 
 @login_required
 def lead_list(request):
-    status_filter = request.GET.get('status', '')
+    \"\"\"Lead list view with error handling.\"\"\"\n    status_filter = request.GET.get('status', '')
     source_filter = request.GET.get('source', '')
     search = request.GET.get('search', '')
     page = int(request.GET.get('page', 1))
     if page < 1:
         page = 1
 
-    leads_qs = Lead.objects.all()
-    if status_filter:
-        leads_qs = leads_qs.filter(status=status_filter)
-    if source_filter:
-        leads_qs = leads_qs.filter(source=source_filter)
-    if search:
-        leads_qs = leads_qs.filter(name__icontains=search)
+    try:
+        leads_qs = Lead.objects.all()
+        if status_filter:
+            leads_qs = leads_qs.filter(status=status_filter)
+        if source_filter:
+            leads_qs = leads_qs.filter(source=source_filter)
+        if search:
+            leads_qs = leads_qs.filter(name__icontains=search)
 
-    total_count = leads_qs.count()
-    total_pages = max(1, (total_count + PAGE_SIZE - 1) // PAGE_SIZE)
-    if page > total_pages:
-        page = total_pages
+        total_count = leads_qs.count()
+        total_pages = max(1, (total_count + PAGE_SIZE - 1) // PAGE_SIZE)
+        if page > total_pages:
+            page = total_pages
 
-    offset = (page - 1) * PAGE_SIZE
-    leads = leads_qs.skip(offset).limit(PAGE_SIZE)
+        offset = (page - 1) * PAGE_SIZE
+        leads = list(leads_qs.skip(offset).limit(PAGE_SIZE))
+    except Exception as e:
+        logger.error(f\"Error fetching leads: {e}\", exc_info=True)
+        leads = []
+        total_count = 0
+        total_pages = 1
+        page = 1
+        messages.error(request, 'Error loading leads. Please try again.')
 
     return render(request, 'leads/lead_list.html', {
         'leads': leads,

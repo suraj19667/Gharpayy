@@ -91,13 +91,26 @@ try:
         host=MONGODB_URI,
         alias='default',
         serverSelectionTimeoutMS=5000,
+        connectTimeoutMS=10000,
     )
     print(f"✓ MongoDB connected: {MONGODB_DB}")
 except Exception as e:
     print(f"⚠ MongoDB connection failed: {str(e)}")
     if not DEBUG:
-        # In production, we want to know about this but not crash
-        print("⚠ Running without MongoDB connection")
+        # In production, log the error but don't crash
+        print("⚠ Running without MongoDB connection - views will show empty data")
+        # Create a dummy connection to prevent mongoengine errors
+        try:
+            mongoengine.connect(
+                db=MONGODB_DB,
+                host='mongomock://localhost',
+                alias='default',
+            )
+        except:
+            pass
+    else:
+        # In development, raise the error
+        raise
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -118,9 +131,58 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Authentication URLs
 LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = '/dashboard/'  # Redirect to dashboard after login
 LOGOUT_REDIRECT_URL = '/login/'
+
+# Logging Configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'logs' / 'django.log',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO' if not DEBUG else 'DEBUG',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'dashboard': {
+            'handlers': ['console'],
+            'level': 'ERROR' if not DEBUG else 'DEBUG',
+            'propagate': False,
+        },
+        'leads': {
+            'handlers': ['console'],
+            'level': 'ERROR' if not DEBUG else 'DEBUG',
+            'propagate': False,
+        },
+    },
+}
 
 # Messages
 from django.contrib.messages import constants as messages

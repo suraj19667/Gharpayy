@@ -21,27 +21,39 @@ class Agent(Document):
 
     def active_leads_count(self):
         """Leads currently assigned and not yet closed (booked/lost)."""
-        from leads.models import Lead
-        return Lead.objects.filter(
-            assigned_agent=self,
-            status__nin=['booked', 'lost']
-        ).count()
+        try:
+            from leads.models import Lead
+            return Lead.objects.filter(
+                assigned_agent=self,
+                status__nin=['booked', 'lost']
+            ).count()
+        except Exception:
+            return 0
 
     def total_leads_count(self):
         """All leads ever assigned to this agent."""
-        from leads.models import Lead
-        return Lead.objects.filter(assigned_agent=self).count()
+        try:
+            from leads.models import Lead
+            return Lead.objects.filter(assigned_agent=self).count()
+        except Exception:
+            return 0
 
     def booked_count(self):
         """Leads this agent converted to Booked."""
-        from leads.models import Lead
-        return Lead.objects.filter(assigned_agent=self, status='booked').count()
+        try:
+            from leads.models import Lead
+            return Lead.objects.filter(assigned_agent=self, status='booked').count()
+        except Exception:
+            return 0
 
     def conversion_rate(self):
-        total = self.total_leads_count()
-        if total == 0:
+        try:
+            total = self.total_leads_count()
+            if total == 0:
+                return 0.0
+            return round(self.booked_count() / total * 100, 1)
+        except Exception:
             return 0.0
-        return round(self.booked_count() / total * 100, 1)
 
 
 class RoundRobinState(Document):
