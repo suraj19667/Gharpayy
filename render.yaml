@@ -14,6 +14,10 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: gharpayy-db
+          property: connectionString
       - key: SECRET_KEY
         generateValue: true
       - key: DEBUG
@@ -30,3 +34,8 @@ services:
         value: admin@gharpayy.com
       - key: ADMIN_PASSWORD
         value: admin123
+
+databases:
+  - name: gharpayy-db
+    plan: free
+    region: oregon

@@ -57,13 +57,27 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'gharpayy.wsgi.application'
 
-# SQLite for Django auth/sessions
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# Database configuration
+# PostgreSQL for production (Render), SQLite for local development
+import dj_database_url
+
+DATABASE_URL = os.environ.get('DATABASE_URL')
+
+if DATABASE_URL:
+    # Production: Use PostgreSQL
+    DATABASES = {
+        'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
     }
-}
+    print("✓ Using PostgreSQL database")
+else:
+    # Local development: Use SQLite
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+    print("✓ Using SQLite database (local)")
 
 # MongoDB connection via mongoengine
 import mongoengine
