@@ -9,7 +9,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         username = os.environ.get('ADMIN_USERNAME', 'admin')
-        email = os.environ.get('ADMIN_EMAIL', 'admin@gharpayy.com')
+        email = os.environ.get('ADMIN_EMAIL', 'admin@example.com')
         password = os.environ.get('ADMIN_PASSWORD', 'admin123')
         
         try:

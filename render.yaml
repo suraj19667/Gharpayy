@@ -31,7 +31,7 @@ services:
       - key: ADMIN_USERNAME
         value: admin
       - key: ADMIN_EMAIL
-        value: admin@gharpayy.com
+        value: admin@example.com
       - key: ADMIN_PASSWORD
         value: admin123
 

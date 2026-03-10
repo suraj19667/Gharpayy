@@ -14,7 +14,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # Create superuser if not exists
         if not User.objects.filter(username='admin').exists():
-            User.objects.create_superuser('admin', 'admin@gharpayy.com', 'admin123')
+            User.objects.create_superuser('admin', 'admin@example.com', 'admin123')
             self.stdout.write(self.style.SUCCESS('Created superuser: admin / admin123'))
 
         # Create agents
